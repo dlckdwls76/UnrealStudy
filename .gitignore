@@ -40,6 +40,7 @@
 *.sdf
 *.VC.db
 *.VC.opendb
+.vsconfig
 
 # Precompiled Assets
 SourceArt/**/*.png
@@ -72,3 +73,23 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+.idea/ .idea/
+.idea/
+
+# 빌드 결과물 및 중간 파일
+Build/
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# IDE 설정 및 임시 파일
+.idea/
+.vs/
+*.sln
+*.vcxproj
+*.userBuild/
+/.claude
+Content/ParagonAurora/
+AGENTS.md
+Content/ASSET/
