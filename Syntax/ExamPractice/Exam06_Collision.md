@@ -28,6 +28,38 @@ SetActorLocation(TargetPos, true);
 3) `BoxComp->SetGenerateOverlapEvents(true);`
 4) `BoxComp->SetCollisionObjectType(ECC_Pawn);`
 
+## 문제 4. Hit 이벤트 델리게이트 함수 형태 (코드 예측)
+컴포넌트가 벽과 쾅 부딪혔을 때 발생하는 `OnComponentHit` 델리게이트에 바인딩할 함수 선언부이다. 에러가 나지 않으려면 빈칸 (A)에 충돌 상세 정보(좌표, 방향 등)를 담은 어떤 구조체가 들어가야 하는가?
+
+```cpp
+UFUNCTION()
+void OnMyHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const [   (A)   ]& Hit);
+```
+
+1) `FVector`
+2) `FHitResult`
+3) `FRotator`
+4) `FCollisionData`
+
+## 문제 5. SweepResult 활용 (코드 예측)
+캐릭터가 보스의 공격 판정(Overlap)에 닿았을 때 호출되는 함수이다. 다음 코드를 통해 얻을 수 있는 정보는 무엇인가?
+
+```cpp
+void AMyCharacter::OnMyOverlap(..., const FHitResult& SweepResult)
+{
+    if(SweepResult.bBlockingHit)
+    {
+        FVector Point = SweepResult.ImpactPoint;
+        UE_LOG(LogTemp, Warning, TEXT("충돌 포인트: %s"), *Point.ToString());
+    }
+}
+```
+
+1) 충돌한 보스의 남은 HP 값
+2) 캐릭터와 보스가 서로 "어디서(물리적 좌표점)" 맞닿았는지 정확한 3D 월드 좌표계
+3) 캐릭터가 받은 데미지 계산식
+4) 보스가 공격한 애니메이션의 프레임 정보
+
 
 <br><br><br><br><br><br>
 ---
@@ -41,3 +73,9 @@ SetActorLocation(TargetPos, true);
 
 ### 문제 3 정답: 2번
 **해설:** 콜리전 설정 창에 있는 프리셋 이름(예: Pawn, BlockAll, OverlapAll 등)을 코드로 한 방에 지정하려면 `SetCollisionProfileName` 함수에 문자열(`FName`)을 넘겨주는 방식이 가장 깔끔하고 실무에서 자주 쓰입니다.
+
+### 문제 4 정답: 2번 (`FHitResult`)
+**해설:** 언리얼의 물리적 충돌과 트레이스(레이캐스트) 결과를 담아오는 만능 구조체의 이름은 바로 **`FHitResult`** 입니다. 이 안에는 부딪힌 액터, 컴포넌트, 맞은 위치(`ImpactPoint`), 표면의 수직 방향(`ImpactNormal`) 등 엄청나게 유용한 정보가 빼곡히 들어있습니다.
+
+### 문제 5 정답: 2번
+**해설:** 매개변수로 넘어온 `FHitResult`의 `ImpactPoint` 속성은 물리 엔진이 연산해 낸 "정확히 맞닿은 타격점의 3D 월드 좌표(X,Y,Z)"를 의미합니다. 이 좌표를 이용해 타격 지점에 정확히 피가 튀는 파티클을 소환하거나 사운드를 재생할 수 있습니다.

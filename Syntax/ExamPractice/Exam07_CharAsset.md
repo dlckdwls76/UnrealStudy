@@ -32,6 +32,34 @@ AddMovementInput(Direction, Value);
 3) `bUseControllerRotationPitch = true;` / `GetCharacterMovement()->bOrientRotationToMovement = true;`
 4) `bUseControllerRotationRoll = false;` / `GetCharacterMovement()->bOrientRotationToMovement = false;`
 
+## 문제 4. 빙의(Possess) 해제 시 입력 반응 (코드 예측)
+전투 도중 아래 함수가 호출되어 캐릭터가 컨트롤러(영혼)를 잃어버렸다. 이후 플레이어가 WASD 이동 키를 눌렀을 때 벌어지는 일은?
+
+```cpp
+void AMyCharacter::Die()
+{
+    Controller->UnPossess();
+}
+```
+
+1) 죽기 직전에 입력했던 마지막 방향으로 영원히 계속 걸어간다.
+2) 언리얼이 자동으로 AI 컨트롤러를 부착하여 AI가 조종하기 시작한다.
+3) `SetupPlayerInputComponent`에 바인딩해둔 입력들이 더 이상 캐릭터로 전달되지 않으므로 키보드를 눌러도 멈춰 서서 아무 반응이 없다.
+4) 입력은 전달되지만 이동 속도가 0으로 고정된다.
+
+## 문제 5. Character vs Pawn (코드 예측)
+A프로그래머는 `APawn`을 상속받았고, B프로그래머는 `ACharacter`를 상속받아 코드를 짰다. 다음 코드를 두 사람이 각각 작성했을 때 발생하는 일은?
+
+```cpp
+// 내 캐릭터를 점프시키는 코드
+GetCharacterMovement()->DoJump(false);
+```
+
+1) 둘 다 정상 작동한다.
+2) A프로그래머(APawn) 코드는 컴파일 에러가 난다. `APawn`에는 걷기/점프 등의 복잡한 물리를 담당하는 `CharacterMovementComponent`가 애초에 아예 존재하지 않기 때문이다.
+3) B프로그래머의 코드는 런타임 크래시가 난다.
+4) `APawn`도 `Jump()` 함수를 호출하면 똑같이 점프한다.
+
 
 <br><br><br><br><br><br>
 ---
@@ -45,3 +73,9 @@ AddMovementInput(Direction, Value);
 
 ### 문제 3 정답: 2번
 **해설:** 마우스를 돌린다고 해서 캐릭터의 몸체가 카메라를 따라 휙휙 즉시 돌아가는(FPS/TPS 타겟팅 방식) 것을 막으려면 액터 최상단 옵션인 `bUseControllerRotationYaw`를 꺼야(`false`) 합니다. 그리고 캐릭터 무브먼트 컴포넌트의 `bOrientRotationToMovement`를 켜야(`true`) 현재 가속받고 있는 방향 쪽으로 모델링 뼈대가 부드럽게 돌아갑니다.
+
+### 문제 4 정답: 3번
+**해설:** 빙의(`Possess`)가 해제되는 즉시, 플레이어의 하드웨어 입력(키보드/마우스)을 받아 캐릭터의 C++ 코드로 넘겨주던 다리가 끊깁니다. 따라서 입력은 완전히 무시되고 조종 불능 상태가 됩니다. (사망 시 입력 차단에 널리 쓰입니다.)
+
+### 문제 5 정답: 2번 (APawn은 에러)
+**해설:** `APawn`은 스스로 움직일 수 있는 빈 껍데기일 뿐이며, 우리가 흔히 아는 걷기, 점프, 수영, 낙하 등의 복잡한 물리 계산 로직은 `ACharacter`가 독점적으로 가지고 있는 `UCharacterMovementComponent`에 몽땅 들어있습니다. 따라서 폰에서는 점프 함수 자체를 부를 수조차 없습니다.

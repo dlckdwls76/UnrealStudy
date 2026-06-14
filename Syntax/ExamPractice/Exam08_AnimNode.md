@@ -39,6 +39,42 @@ if (OwnerPawn)
 3) 무기를 휘두를 때 상체는 공격 애니메이션을 틀면서 하체는 계속 뛰어다닐 수 있게 뼈대 레이어를 분리할 수 있다.
 4) 언리얼 엔진의 C++ 가비지 컬렉션을 무시하고 컴포넌트 메모리를 영구적으로 보호하는 역할을 한다.
 
+## 문제 4. 포인터 널 체크 누락 (코드 예측)
+`NativeUpdateAnimation` 함수 내부에 다음과 같이 코드를 작성했다. 발생할 수 있는 가장 치명적인 문제는 무엇인가?
+
+```cpp
+void UMyAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+    // 널 체크(if문) 없이 즉시 캐스팅 후 역참조
+    ACharacter* MyChar = Cast<ACharacter>(TryGetPawnOwner());
+    CurrentSpeed = MyChar->GetVelocity().Size();
+}
+```
+
+1) 블루프린트에서 변수값을 덮어써서 속도가 무조건 0이 된다.
+2) 맵 로딩 화면이나 캐릭터가 아직 완전히 월드에 스폰되지 않은 찰나의 순간에 `TryGetPawnOwner()`가 nullptr을 반환하며, 널 포인터를 역참조하여 무조건 **엔진 크래시**가 터진다.
+3) 애니메이션이 2배속으로 빠르게 재생된다.
+4) 컴파일 에러가 발생하여 빌드가 막힌다.
+
+## 문제 5. 몽타주 재생 함수 (빈칸 채우기)
+C++ 캐릭터 코드에서 몬스터가 공격할 때 내가 만든 공격 몽타주(`AttackMontage`)를 강제 재생시키려고 한다. 빈칸에 들어갈 알맞은 구조는?
+
+```cpp
+void AMonster::PlayAttackAnim()
+{
+    UAnimInstance* AnimInst = Mesh->GetAnimInstance();
+    if (AnimInst && AttackMontage)
+    {
+        AnimInst->[    (A)    ](AttackMontage, 1.0f); // 1.0f는 재생 속도
+    }
+}
+```
+
+1) `PlayAnimation`
+2) `Montage_Play`
+3) `Anim_Start`
+4) `ForcePlay`
+
 
 <br><br><br><br><br><br>
 ---
@@ -52,3 +88,9 @@ if (OwnerPawn)
 
 ### 문제 3 정답: 4번
 **해설:** 몽타주는 애니메이션의 강제 재생, 슬롯 오버라이딩, 노티파이를 통한 타이밍 로직 처리, 상하체 분리 블렌딩 등을 위한 애니메이션 시퀀스 도구이지, 물리적 메모리 관리나 가비지 컬렉션(GC)을 제어하는 기능과는 전혀 무관합니다.
+
+### 문제 4 정답: 2번 (엔진 크래시)
+**해설:** 언리얼 엔진에서 포인터 널 체크(`if(MyChar)`)를 하지 않고 `->` 로 변수나 함수에 접근하면 가장 무서운 'Null Pointer 역참조(Access Violation)' 크래시가 100% 터집니다. 특히 애니메이션 시스템은 폰이 완전히 스폰되기 전 찰나의 순간(초기화 로딩 타이밍)에도 틱이 돌 수 있어 각별히 주의해야 합니다.
+
+### 문제 5 정답: 2번 (`Montage_Play`)
+**해설:** 몽타주 에셋은 스켈레탈 메시의 `UAnimInstance` 객체에서 제공하는 내장 함수인 `Montage_Play`를 통해 호출해야 블렌드 스페이스를 뚫고 강제로 덮어씌워지며 재생됩니다.

@@ -5,7 +5,7 @@
 이때 사용해야 하는 올바른 언리얼 C++ 함수는 무엇인가?
 
 1) `CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particle"));`
-2) `NewObject<UParticleSystemComponent>(this);` 호출 후 `RegisterComponent();`
+2) `NewObject<UParticleSystemComponent>(this);` 후 `RegisterComponent();`
 3) `SpawnActor<UParticleSystemComponent>();`
 4) `ConstructObject<UParticleSystemComponent>();`
 
@@ -34,6 +34,41 @@ MeshComp->[   (B)   ](BoxComp);
 3) (A) `GetRootComponent` / (B) `AttachToComponent`
 4) (A) `RootComponent` / (B) `BindTo`
 
+## 문제 4. 컴포넌트 생성 문법 (빈칸 채우기)
+C++ 액터의 생성자에서 씬 컴포넌트를 생성하여 멤버 변수인 `MyScene`에 할당하려고 한다. 다음 문법 중 올바른 것은 무엇인가?
+
+```cpp
+// 헤더에 선언된 변수: USceneComponent* MyScene;
+AMyActor::AMyActor()
+{
+    MyScene = [      빈 칸      ];
+}
+```
+
+1) `CreateDefaultSubobject(USceneComponent, TEXT("SceneComp"))`
+2) `CreateDefaultSubobject<USceneComponent>(TEXT("SceneComp"))`
+3) `new USceneComponent(TEXT("SceneComp"))`
+4) `CreateComponent<USceneComponent>()`
+
+## 문제 5. 특정 타입의 컴포넌트 검색 (코드 예측)
+다음 코드를 실행했을 때의 상황으로 가장 올바르게 설명한 것은?
+
+```cpp
+void AMyCharacter::CheckEquip()
+{
+    UStaticMeshComponent* MyMesh = GetComponentByClass<UStaticMeshComponent>();
+    if (MyMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Mesh Found: %s"), *MyMesh->GetName());
+    }
+}
+```
+
+1) 캐릭터에 붙어있는 "모든" UStaticMeshComponent의 이름을 로그로 전부 출력한다.
+2) 캐릭터에 여러 메시가 붙어있더라도, 엔진이 찾아낸 "첫 번째" 메시 컴포넌트의 이름 하나만 출력하고 종료한다.
+3) 클래스 이름이 정확히 일치하지 않으면 찾지 못해 컴파일 에러가 발생한다.
+4) 런타임에 이 함수를 호출하면 메모리 누수가 발생한다.
+
 
 <br><br><br><br><br><br>
 ---
@@ -46,4 +81,10 @@ MeshComp->[   (B)   ](BoxComp);
 **해설:** 위치, 회전, 크기(Transform)를 나타내는 행렬 연산이 단 하나도 필요 없는 순수 로직/데이터 처리용 컴포넌트는 `UActorComponent`를 상속받는 것이 국룰입니다. Transform 데이터가 덕지덕지 붙어 있는 `USceneComponent`를 상속받으면 메모리와 연산에 큰 손해를 봅니다.
 
 ### 문제 3 정답: 2번
-**해설:** 액터의 최상단 뿌리(Root)를 지정할 때는 액터가 이미 갖고 있는 `RootComponent` 포인터 변수에 직접 대입(`RootComponent = BoxComp;`)합니다. 그리고 생성자 안에서 특정 씬 컴포넌트를 다른 씬 컴포넌트의 자식으로 부착할 때는 **`SetupAttachment`** 함수를 사용해야 트랜스폼 계층 구조가 안전하게 묶입니다. (`AttachToComponent`는 생성자가 아닌 런타임(BeginPlay 이후)에 동적 부착할 때 씁니다.)
+**해설:** 액터의 최상단 뿌리(Root)를 지정할 때는 액터가 이미 갖고 있는 `RootComponent` 포인터 변수에 직접 대입(`RootComponent = BoxComp;`)합니다. 그리고 생성자 안에서 특정 씬 컴포넌트를 다른 씬 컴포넌트의 자식으로 부착할 때는 **`SetupAttachment`** 함수를 사용해야 트랜스폼 계층 구조가 안전하게 묶입니다. (`AttachToComponent`는 런타임 중에 부착할 때 씁니다.)
+
+### 문제 4 정답: 2번
+**해설:** 언리얼 C++에서 생성자 타임에 컴포넌트를 생성하는 유일무이한 표준 문법은 템플릿 함수인 `CreateDefaultSubobject<클래스이름>(TEXT("문자열 식별자"))`입니다. C++의 기본 연산자인 `new`를 언리얼 객체(UObject)에 직접 사용하면 가비지 컬렉터와 리플렉션 시스템이 박살나며 크래시가 일어납니다.
+
+### 문제 5 정답: 2번
+**해설:** `GetComponentByClass<T>()` 함수는 액터가 소유한 컴포넌트 리스트를 뒤지다가, 해당 타입(`UStaticMeshComponent`)과 일치하거나 그 자식인 컴포넌트를 발견하는 즉시 **가장 처음 찾은 단 하나**의 포인터만 반환하고 검색을 멈춥니다. 여러 개를 모두 찾고 싶다면 `GetComponentsByClass` (끝에 s가 붙은 함수)를 써야 합니다.

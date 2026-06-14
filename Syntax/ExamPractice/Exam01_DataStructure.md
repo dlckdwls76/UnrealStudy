@@ -65,6 +65,48 @@ FString Item = Inventory.Get(100);
 UE_LOG(LogTemp, Warning, TEXT("%s"), *Item);
 ```
 
+## 문제 4. 배열의 유효성 검사 (코드 예측)
+다음 코드를 실행했을 때 발생하는 결과로 알맞은 것은?
+
+```cpp
+TArray<int32> LevelScores;
+LevelScores.Add(100);
+LevelScores.Add(200);
+
+if (LevelScores.IsValidIndex(2))
+{
+    UE_LOG(LogTemp, Warning, TEXT("점수: %d"), LevelScores[2]);
+}
+else
+{
+    UE_LOG(LogTemp, Error, TEXT("인덱스 오류!"));
+}
+```
+
+1) 컴파일 타임 에러 발생
+2) 런타임에 에디터 크래시(뻗음) 발생
+3) 콘솔에 `점수: 0` 출력 (가비지 값)
+4) 콘솔에 `인덱스 오류!` 출력
+
+## 문제 5. TMap의 반복자(Iterator) 순회 (빈칸 채우기)
+다음 코드는 딕셔너리(`TMap`)에 저장된 모든 Key와 Value를 순회하며 출력하는 코드이다. 빈칸 (A), (B)에 들어갈 올바른 속성은?
+
+```cpp
+TMap<int32, FString> WeaponDict;
+WeaponDict.Add(1, TEXT("Sword"));
+WeaponDict.Add(2, TEXT("Bow"));
+
+for (const auto& Elem : WeaponDict)
+{
+    UE_LOG(LogTemp, Warning, TEXT("아이디: %d, 이름: %s"), Elem.[   (A)   ], *Elem.[   (B)   ]);
+}
+```
+
+1) (A) `Index` / (B) `Name`
+2) (A) `First` / (B) `Second`
+3) (A) `Key` / (B) `Value`
+4) (A) `ID` / (B) `Data`
+
 
 <br><br><br><br><br><br>
 ---
@@ -78,3 +120,9 @@ UE_LOG(LogTemp, Warning, TEXT("%s"), *Item);
 
 ### 문제 3 정답: 2번
 **해설:** `TMap`의 `Find()` 함수는 값을 복사해 주지 않고 해당 값의 **포인터(`*`)**를 반환합니다. 만약 키가 없으면 `nullptr`을 반환하므로, 2번처럼 포인터로 받고 널 체크(`if(ItemPtr)`)를 거친 뒤, `**ItemPtr`로 이중 역참조하여 출력하는 것이 크래시를 방지하는 가장 완벽한 언리얼 C++ 정석 코드입니다. (3번도 동작은 하나 두 번 검색하므로 비효율적입니다.)
+
+### 문제 4 정답: 4번 (인덱스 오류! 출력)
+**해설:** 배열에 원소가 2개 들었으므로 유효 인덱스는 `0`과 `1`뿐입니다. 만약 `IsValidIndex` 체크 없이 곧바로 `LevelScores[2]`에 접근했다면 배열 범위를 벗어나 크래시(2번)가 났겠지만, `IsValidIndex(2)`가 `false`를 반환하여 안전하게 `else` 구문을 타게 되므로 크래시 없이 4번이 출력됩니다.
+
+### 문제 5 정답: 3번 ((A) `Key` / (B) `Value`)
+**해설:** 언리얼 C++에서 `TMap`을 `for`문으로 순회(Range-based for)할 때, 튀어나오는 각각의 요소(`Elem`)는 `TPair` 구조체 형태입니다. 이 구조체 안에는 식별자와 데이터를 꺼낼 수 있는 멤버 변수로 딱 두 개, **`Key`**와 **`Value`**가 존재합니다. (C++ STL의 `std::map`이 `first/second`를 쓰는 것과 대비되는 언리얼의 직관적인 작명입니다.)
