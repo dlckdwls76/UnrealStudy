@@ -5,25 +5,31 @@ AStudy07CharAsset::AStudy07CharAsset()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    // ----------------------------------------------------
-    // 캐릭터 에셋 제어 예시
-    // ----------------------------------------------------
-    
-    // 1. 메시(Skeletal Mesh) 제어
-    // 캡슐 컴포넌트가 루트이므로 메시는 보통 정중앙에 위치합니다. 
-    // 발을 캡슐의 바닥으로 내리고 시선을 맞추기 위해 Z축을 -90도, 회전값도 -90도 틀어주는 것이 국룰 세팅입니다.
     if (GetMesh())
     {
         GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
         GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
     }
 
-    // 2. 캐릭터 무브먼트(Movement) 제어
-    // 중력, 걷기 속도, 마찰력, 점프력 등을 코드로 설정합니다.
     if (GetCharacterMovement())
     {
-        GetCharacterMovement()->MaxWalkSpeed = 500.0f; // 최대 걷기 속도
-        GetCharacterMovement()->JumpZVelocity = 400.0f; // 위쪽(Z)으로 튀어오르는 점프 힘
+        GetCharacterMovement()->MaxWalkSpeed = 500.0f; 
+        GetCharacterMovement()->JumpZVelocity = 400.0f; 
+        
+        // ----------------------------------------------------
+        // 심화: 캐릭터의 몸체 회전 제어 (3인칭 RPG 국룰 세팅)
+        // ----------------------------------------------------
+        
+        // 1. 마우스를 돌린다고 해서 캐릭터 몸체가 바로 휙휙 돌아가지 않게 막음
+        bUseControllerRotationPitch = false;
+        bUseControllerRotationYaw = false;
+        bUseControllerRotationRoll = false;
+
+        // 2. 대신, 캐릭터가 걷고 있는 "이동하는 방향"을 쳐다보며 몸을 부드럽게 돌리도록 설정함
+        GetCharacterMovement()->bOrientRotationToMovement = true;
+        
+        // 3. 캐릭터가 돌아가는 속도 (Z축 회전(Yaw) 초당 540도 속도)
+        GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
     }
 }
 

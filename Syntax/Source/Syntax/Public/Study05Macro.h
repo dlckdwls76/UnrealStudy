@@ -14,39 +14,43 @@ public:
 
 public:
     // ==============================================================================
-    // [5] C++ 매크로 시스템 (UFUNCTION)
+    // [5] C++ 매크로 시스템 (UFUNCTION 심화)
     // ==============================================================================
     
-    // BlueprintCallable: 이 함수를 블루프린트 이벤트 그래프에서 실행 노드로 만들어줍니다. (일반 함수)
     UFUNCTION(BlueprintCallable, Category = "Study|Macro")
     void ExecuteMacroAction();
 
-    // BlueprintPure: 실행 핀(하얀 줄) 없이 오직 값만 계산해서 반환해주는 초록색 노드가 됩니다. (Get 함수에 씀)
     UFUNCTION(BlueprintPure, Category = "Study|Macro")
     int32 GetMacroValue() const;
 
-    // BlueprintImplementableEvent: C++ 헤더에 선언만 해두고, 구현은 블루프린트에서 노드로 짜도록 만듭니다.
     UFUNCTION(BlueprintImplementableEvent, Category = "Study|Macro")
     void OnMyCustomEventTriggered();
 
+    // BlueprintNativeEvent: C++에서 '기본 동작(Native)'을 구현해두되, 
+    // 블루프린트에서 원한다면 그 기본 동작을 덮어쓰고(Override) 입맛대로 바꿀 수 있게 해줍니다.
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Study|Macro")
+    void Interact();
+    virtual void Interact_Implementation(); // BlueprintNativeEvent를 쓰면 무조건 "_Implementation" 함수를 같이 선언하고 구현해야 합니다.
+
 private:
     // ==============================================================================
-    // [5] C++ 매크로 시스템 (UPROPERTY)
+    // [5] C++ 매크로 시스템 (UPROPERTY 심화 메타데이터)
     // ==============================================================================
     
-    // EditAnywhere: CDO 화면과 맵에 배치된 인스턴스의 디테일 창 양쪽 모두에서 값을 수정할 수 있습니다.
-    // VisibleAnywhere: 편집은 불가능하고 보기만 가능합니다. (보통 컴포넌트 포인터에 씀)
-    // BlueprintReadWrite: 블루프린트 변수처럼 Get / Set 노드를 둘 다 꺼내 쓸 수 있습니다.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Study|Macro", meta = (AllowPrivateAccess = "true"))
+    // EditAnywhere, BlueprintReadWrite 외에도 다양한 메타(meta) 속성으로 에디터를 편하게 만들 수 있습니다.
+    // ClampMin/ClampMax: 에디터에서 값을 입력할 때 최소/최대치를 제한합니다.
+    // DisplayName: 실제 C++ 변수 이름은 MacroTestValue지만, 블루프린트에는 "매크로 테스트 값"이라는 예쁜 한글 이름으로 보여줍니다.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Study|Macro", meta = (AllowPrivateAccess = "true", ClampMin = "0", ClampMax = "100", DisplayName = "매크로 테스트 값 (0~100)"))
     int32 MacroTestValue;
 
     // ==============================================================================
-    // [예시 문제: UFUNCTION 매크로]
-    // Q: 캐릭터의 남은 체력을 반환하는 GetHealth() C++ 함수를 만들었습니다. 
-    //    블루프린트에서 "실행 핀(하얀 줄)" 없이 오직 값만 꺼내 쓰는 노드(순수 노드)로 
-    //    만들고 싶습니다. UFUNCTION 괄호 안에 어떤 키워드를 넣어야 할까요?
+    // [예시 문제 2: BlueprintNativeEvent]
+    // Q: 아이템과 상호작용하는 Interact() 함수를 만들었습니다. 
+    //    일반적인 무기는 C++에 짜놓은 기본 로직을 따르지만, '저주받은 무기'는 블루프린트에서 
+    //    특수한 로직으로 덮어쓰기(Override) 하고 싶습니다. 
+    //    UFUNCTION 괄호 안에 어떤 매크로를 넣어야 하며, C++ .cpp 파일에는 함수 이름을 어떻게 적어 구현해야 할까요?
     // 
-    // A: BlueprintPure 입니다. 
-    //    (참고: 내부 상태를 변경하지 않는 Get 계열 함수는 보통 const를 붙이고 BlueprintPure를 적용합니다.)
+    // A: 1) 매크로: BlueprintNativeEvent
+    //    2) C++ 구현 함수명: Interact_Implementation()
     // ==============================================================================
 };

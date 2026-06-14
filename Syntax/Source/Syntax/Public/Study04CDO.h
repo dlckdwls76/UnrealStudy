@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "Study04CDO.generated.h"
 
+class UStaticMeshComponent;
+
 UCLASS()
 class SYNTAX_API AStudy04CDO : public AActor
 {
@@ -17,12 +19,23 @@ protected:
 
 private:
     // ==============================================================================
-    // [4] CDO (Class Default Object)
+    // [4] CDO (Class Default Object) 심화
     // ==============================================================================
-    // 특징: 엔진이 초기화될 때 각 클래스별로 "단 1개만" 생성되는 기본 템플릿(원본) 객체입니다.
-    //      레벨에 스폰되는 모든 인스턴스들은 처음 생성될 때 이 CDO를 복사해서 태어납니다.
-    // 에디터 작용: 블루프린트를 열었을 때 우측 디테일 패널에 적혀있는 값들이 바로 CDO의 값입니다.
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Study|CDO", meta = (AllowPrivateAccess = "true"))
     int32 BaseDamage;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Study|CDO", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UStaticMeshComponent> MeshComp;
+
+    // ==============================================================================
+    // [예시 문제 2: CDO와 에셋 로드(ConstructorHelpers)]
+    // Q: 생성자(Constructor)에서 ConstructorHelpers::FObjectFinder를 이용해 특정 3D 메시(.uasset)를 
+    //    불러와 컴포넌트에 입혀두려고 합니다. 만약 이 코드를 BeginPlay() 안으로 옮겨서 실행하면 어떻게 될까요?
+    // 
+    // A: 에디터 크래시(Crash)가 발생하거나 컴파일 타임 에러가 납니다.
+    //    이유: ConstructorHelpers는 오직 "CDO를 생성하는 생성자 타임(초기화 시점)"에만 
+    //         동작하도록 설계된 엔진 전용 유틸리티입니다. 런타임(BeginPlay 이후)에 에셋을 
+    //         동적으로 로드하려면 LoadObject나 동기/비동기 에셋 로딩 방식(StreamableManager)을 써야 합니다.
+    // ==============================================================================
 };
